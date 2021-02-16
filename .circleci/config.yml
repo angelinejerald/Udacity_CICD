@@ -104,6 +104,8 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - restore_cache:
+          keys: [test-frontend, test-backend]
       - run:
           name: yum install tar gzip
           command: yum -y install tar gzip
@@ -115,6 +117,7 @@ jobs:
               --stack-name "udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"\
               --tags project="udapeopleBK"
+
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -129,6 +132,7 @@ jobs:
             bkip=$(echo "aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeopleBackend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
             echo $bkip > backip.sh; chmod 755 backip.sh
             ./backip.sh >> .circleci/ansible/inventory.txt
+            
       - persist_to_workspace:
           root: ~/
           paths:
@@ -145,13 +149,13 @@ workflows:
             requires: [build-frontend]
       - test-backend:
             requires: [build-backend]
-      - scan-frontend:
-            requires: [build-frontend]
-      - scan-backend:
-            requires: [build-backend]
       - deploy-infrastructure:
-            requires: [scan-frontend, scan-backend]
+            requires: [test-frontend, test-backend]
             filters:
               branches:
                 only: 
                   -master
+      - scan-frontend:
+            requires: [build-frontend]
+      - scan-backend:
+            requires: [build-backend]

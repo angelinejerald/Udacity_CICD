@@ -13,6 +13,22 @@ commands:
             aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
             aws cloudformation delete-stack --stack-name udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontendStack-${CIRCLE_WORKFLOW_ID:0:7}
+
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow.  
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            SUCCESS=`curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}`
+            if [ "$SUCCESS" == "Migration Successful" ]; 
+            then
+               cd ~/project/backend
+               npm install
+               npm run migrations:revert
+               exit 1
+            fi
             
 jobs:
   build-frontend:
@@ -167,6 +183,7 @@ jobs:
       - checkout
       - run:
           name: Run migrations
+          working_directory: ./backend
           command: |
             touch .env
             echo TYPEORM_CONNECTION=postgres >> .env
@@ -223,7 +240,72 @@ jobs:
             s3Bucket=$(echo "udapeople-${CIRCLE_WORKFLOW_ID:0:7}")
             aws s3 sync dist s3://$s3Bucket/
             s3FullUrl=("http://$s3Bucket.s3-website-eu-west-1.amazonaws.com")
+            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$s3FullUrl" https://api.memstash.io/values/s3_${CIRCLE_WORKFLOW_ID}
       - destroy-environment 
+
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - 4f:79:68:57:e0:d7:f1:52:73:05:8a:b8:63:5f:9c:45
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          command: |
+            pip install awscli
+      - run:
+          name: Deploy backend
+          command: |
+            [[ ! -d backend ]] && mkdir backend
+            myenv="backend/.env"
+            echo ENVIROMENT=production > $myenv
+            echo TYPEORM_CONNECTION=postgres >> $myenv
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> $myenv
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> $myenv
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> $myenv
+            echo TYPEORM_HOST=$TYPEORM_HOST >> $myenv
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> $myenv
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> $myenv
+            tar -cvf backend.tar backend
+            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible/inventory.txt .circleci/ansible/deploy-backend.yml
+      - destroy-environment 
+
+  smoke-test:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Get backend url
+          command: |
+            bk_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
+      - run:
+          name: Backend smoke test.
+          command: |
+            back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
+            if curl -s "http://$back_ip:3030/api/status" | grep "ok"
+            then
+              echo "Success"
+            else
+              exit 1
+            fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+            front_url=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/s3_${CIRCLE_WORKFLOW_ID})
+            if curl -s ${front_url} | grep "Welcome"
+            then
+              echo "Frontend alive"
+            else
+              exit 1
+            fi
+            
+      - destroy-environment 
+      - revert-migrations
 
 workflows:
   default:
@@ -250,3 +332,7 @@ workflows:
           requires: [configure-infrastructure]
       - deploy-frontend:
           requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]

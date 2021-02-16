@@ -105,6 +105,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: yum install tar gzip
+          command: yum -y install tar gzip
+      - run:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
@@ -130,7 +133,7 @@ jobs:
           root: .circleci
           paths:
             - ansible/inventory.txt  
-      - destroy-environment 
+      #- destroy-environment 
           
 
 workflows:

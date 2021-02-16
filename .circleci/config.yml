@@ -130,9 +130,9 @@ jobs:
             echo $bkip > backip.sh; chmod 755 backip.sh
             ./backip.sh >> .circleci/ansible/inventory.txt
       - persist_to_workspace:
-          root: .circleci
+          root: ~/
           paths:
-            - ansible/inventory.txt  
+            - project/.circleci/ansible/inventory.txt 
       #- destroy-environment 
           
 

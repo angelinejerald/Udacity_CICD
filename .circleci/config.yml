@@ -25,7 +25,6 @@ jobs:
             cd ./frontend
             npm i
             npm run build
-            exit 1
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
@@ -43,7 +42,6 @@ jobs:
             cd ./backend
             npm i
             npm run build
-             exit 1
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build

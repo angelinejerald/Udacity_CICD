@@ -10,8 +10,9 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            # Your code here
-            exit 1
+            aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
+            aws cloudformation delete-stack --stack-name udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-frontendStack-${CIRCLE_WORKFLOW_ID:0:7}
             
 jobs:
   build-frontend:
@@ -136,7 +137,28 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-          
+      - destroy-environment
+
+
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.12 
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - 4f:79:68:57:e0:d7:f1:52:73:05:8a:b8:63:5f:9c:45
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook -i /tmp/ansible/inventory.txt .circleci/ansible/configure-server.yml
+      - destroy-environment
 
 workflows:
   default:
@@ -157,3 +179,5 @@ workflows:
               branches:
                 only: 
                   - main
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]

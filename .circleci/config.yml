@@ -160,6 +160,39 @@ jobs:
             ansible-playbook -i /tmp/ansible/inventory.txt .circleci/ansible/configure-server.yml
       - destroy-environment
 
+  run-migrations:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            touch .env
+            echo TYPEORM_CONNECTION=postgres >> .env
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> .env
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> .env
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> .env
+            echo TYPEORM_HOST=$TYPEORM_HOST >> .env
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> .env
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> .env
+            npm i
+            npm install oauth-sign
+            npm run migrations > migrationresult.txt
+      - run:
+          name: Send migration results to memstash
+          command: |
+            #!/bin/bash
+            cd backend
+            cat migrationresult.txt
+            if [ $(grep -i "has been executed successfully" migrationresult.txt | wc -l) -ge 1 ]
+              then 
+              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Migration Successful" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+              else
+              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Migration Failed" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+            fi
+      - destroy-environment     
+
 workflows:
   default:
     jobs:
@@ -181,3 +214,5 @@ workflows:
                   - main
       - configure-infrastructure:
           requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]

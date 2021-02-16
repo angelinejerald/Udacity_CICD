@@ -108,7 +108,7 @@ workflows:
       - test-backend:
             requires: [build-backend]
       - scan-frontend:
-            requires: [test-frontend]
+            requires: [build-frontend]
       - scan-backend:
-            requires: [test-backend]
+            requires: [build-backend]
  

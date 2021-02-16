@@ -98,6 +98,39 @@ jobs:
             cd ./backend
             npm i
             npm audit fix --audit-level=critical
+
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --stack-name "udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"\
+              --tags project="udapeopleBK"
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/frontend.yml \
+              --tags project="udapeopleFE"
+              --stack-name "udapeople-frontendStack-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" \
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            bkip=$(echo "aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeopleBackend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            echo $bkip > backip.sh; chmod 755 backip.sh
+            ./backip.sh >> .circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: .circleci
+          paths:
+            - ansible/inventory.txt  
+      - destroy-environment 
           
 
 workflows:
@@ -113,4 +146,9 @@ workflows:
             requires: [build-frontend]
       - scan-backend:
             requires: [build-backend]
+      - deploy-infrastructure:
+            requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+            filters:
+              branches:
+                only: [test-feature-branch]
  

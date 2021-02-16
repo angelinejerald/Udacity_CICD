@@ -159,7 +159,7 @@ jobs:
           command: |
             ansible-playbook -i /tmp/ansible/inventory.txt .circleci/ansible/configure-server.yml
       - destroy-environment
-
+      
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
@@ -176,6 +176,7 @@ jobs:
             echo TYPEORM_HOST=$TYPEORM_HOST >> .env
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> .env
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> .env
+            ls -l
             npm i
             npm install oauth-sign
             npm run migrations > migrationresult.txt
@@ -191,7 +192,38 @@ jobs:
               else
               curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Migration Failed" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
             fi
-      - destroy-environment     
+      - destroy-environment
+
+  deploy-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Get backend url
+          command: |
+            API_IPback=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
+            export API_URL=$(echo "http://$API_IPback:3030")
+            cd frontend
+            echo "${API_URL}" > apiurl.txt
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            export API_URL=$(cat apiurl.txt)
+            cat apiurl.txt
+            npm i
+            npm run build
+            s3Bucket=$(echo "udapeople-${CIRCLE_WORKFLOW_ID:0:7}")
+            aws s3 sync dist s3://$s3Bucket/
+            s3FullUrl=("http://$s3Bucket.s3-website-eu-west-1.amazonaws.com")
+      - destroy-environment 
 
 workflows:
   default:
@@ -214,5 +246,5 @@ workflows:
                   - main
       - configure-infrastructure:
           requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]

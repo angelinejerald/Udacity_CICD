@@ -79,7 +79,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run an audit of the frontend
+          name: Scan frontend dependencies
           command: |
             cd ./frontend
             npm i
@@ -91,7 +91,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run an audit of the backend
+          name: Scan backend dependencies
           command: |
             cd ./backend
             npm i

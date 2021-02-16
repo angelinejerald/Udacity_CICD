@@ -10,6 +10,7 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
+            sudo pip install awscli --force-reinstall --upgrade
             aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
             aws cloudformation delete-stack --stack-name udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontendStack-${CIRCLE_WORKFLOW_ID:0:7}
@@ -194,6 +195,7 @@ jobs:
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> .env
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> .env
             ls -l
+            cat .env
             npm i
             npm install oauth-sign
             npm run migrations > migrationresult.txt

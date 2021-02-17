@@ -268,9 +268,8 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            [[ ! -d backend ]] && mkdir backend
             myenv="backend/.env"
-            echo ENVIROMENT=production > $myenv
+            echo ENVIROMENT=local > $myenv
             echo TYPEORM_CONNECTION=postgres >> $myenv
             echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> $myenv
             echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> $myenv

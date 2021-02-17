@@ -25,7 +25,7 @@
     "premigrations:generate": "npm run build",
     "migrations:generate": "ts-node -r dotenv/config node_modules/.bin/typeorm migration:generate",
     "premigrations": "npm run build",
-    "migrations": "ts-node -r dotenv/config node_modules/.bin/typeorm migration:run",
+    "migrations": "ts-node -r dotenv/config node_modules/.bin/typeorm schema:log",
     "migrations-win": "ts-node node_modules/typeorm/cli.js migration:run",
     "premigrations:revert": "npm run build",
     "migrations:revert": "ts-node -r dotenv/config node_modules/.bin/typeorm migration:revert",

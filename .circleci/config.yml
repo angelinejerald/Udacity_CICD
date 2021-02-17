@@ -148,7 +148,7 @@ jobs:
             echo $bkip > backip.sh; chmod 755 backip.sh
             backendip=$(./backip.sh)
             ./backip.sh >> .circleci/ansible/inventory.txt
-            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$backendip" https://api.memstash.io/values/ec2_bk
+            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$backendip" https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
       - persist_to_workspace:
           root: ~/
           paths:
@@ -295,7 +295,7 @@ jobs:
             back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
             if curl -s "http://$back_ip:3030/api/status" | grep "ok"
             then
-              return 1
+              return 0
             else
               return 1
             fi
@@ -305,9 +305,9 @@ jobs:
             front_url=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/s3_${CIRCLE_WORKFLOW_ID})
             if curl -s ${front_url} | grep "Welcome"
             then
-              echo "Success"
+              return 1
             else
-              exit 1
+              return 1
             fi
             
       - destroy-environment 

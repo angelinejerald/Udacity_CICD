@@ -148,6 +148,7 @@ jobs:
             echo $bkip > backip.sh; chmod 755 backip.sh
             ./backip.sh >> .circleci/ansible/inventory.txt
             backendip=$(./backip.sh)
+            echo $backendip;
             curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$backendip" https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID}
       - persist_to_workspace:
           root: ~/
@@ -290,7 +291,7 @@ jobs:
           command: |
             sleep 6
             back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
-            ecgo $back_ip
+            echo ${back_ip}
             export NO_PROXY=$back_ip
             if curl -s "http://$back_ip:3030/api/status" | grep "ok"
             then

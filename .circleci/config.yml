@@ -286,6 +286,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install dependencies
+          command: |
+            apt-get install curl
+      - run:
           name: Frontend smoke test.
           command: |
             URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-east-1.amazonaws.com/#/employees"
@@ -298,8 +302,9 @@ jobs:
       - run:
           name: Get backend url - Backend smoke test.
           command: |
-            back_ip=$(aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeopleBackend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
-            if curl -s "http://$back_ip:3030/api/status" | grep "ok"
+            sleep 6
+            back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
+             if curl -s "http://$back_ip:3030/api/status" | grep "ok"
             then
               echo "SUCCESS"
             else

@@ -289,11 +289,13 @@ jobs:
           name: Frontend smoke test.
           command: |
             front_url=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/s3_${CIRCLE_WORKFLOW_ID})
+            echo ${front_url}
             if curl -s ${front_url} | grep "Welcome"
             then
               echo "Frontend alive"
             else
               echo "Debug Info Below"
+              echo ${front_url}
               curl -vvv ${front_url}
               exit 1
             fi

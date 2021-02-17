@@ -289,8 +289,8 @@ jobs:
           name: Get backend url.
           command: |
             bkip=$(echo "aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeopleBackend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
-            echo $bkip > backip.sh; chmod 755 backip.sh
-            backendip=$(./backip.sh)
+            echo $bkip > bkip.sh; chmod 755 bkip.sh
+            backendip=$(./bkip.sh)
             curl -H "Content-Type: text/plain" -H "token: d5226998-4c5a-4a13-93ae-f62e333d9999" --request PUT --data "$backendip" https://api.memstash.io/values/ec2_bkip_${CIRCLE_WORKFLOW_ID}
             
       - run:
@@ -303,7 +303,6 @@ jobs:
               echo "Backend alive, Proceeding"
             else
               echo "Debug Info Below"
-              curl -vvv "http://$back_ip:3030/api/status"
               exit 1
             fi
             

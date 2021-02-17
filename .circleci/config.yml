@@ -7,12 +7,6 @@ commands:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     steps:
       - run:
-          name: Install PIP
-          command: sudo apt-get install python-pip python-dev
-      - run:
-          name: Install awscli
-          command: sudo pip install awscli
-      - run:
           name: Destroy environments
           when: on_fail
           command: |
@@ -192,7 +186,7 @@ jobs:
           working_directory: ./backend
           command: |
             touch .env
-            echo ENVIROMENT=production > .env
+            echo ENVIROMENT=local > .env
             echo TYPEORM_CONNECTION=postgres >> .env
             echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> .env
             echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> .env

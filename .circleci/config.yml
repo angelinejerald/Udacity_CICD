@@ -340,6 +340,6 @@ workflows:
       - deploy-frontend:
           requires: [run-migrations]
       - deploy-backend:
-          requires: [run-migrations]
+            requires: [deploy-frontend]
       - smoke-test:
-          requires: [deploy-backend]
+            requires: [deploy-backend]

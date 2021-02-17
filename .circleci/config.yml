@@ -282,7 +282,7 @@ jobs:
 
   smoke-test:
     docker:
-      - image: amazon/aws-cli
+      - image: python:3.7-alpine3.12 
     steps:
       - checkout
       - run:
@@ -298,7 +298,7 @@ jobs:
           command: |
             back_ip=$(curl -H "token: d5226998-4c5a-4a13-93ae-f62e333d9999" --request GET https://api.memstash.io/values/ec2_bkip_${CIRCLE_WORKFLOW_ID})
             echo $back_ip
-            hello=$(curl -s "http://$back_ip:3030/api/status")
+            hello=$(curl -s "https://$back_ip:3030/api/status")
             echo ${hello}
             
       - destroy-environment 

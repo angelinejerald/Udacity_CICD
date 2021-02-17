@@ -288,13 +288,13 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+            curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+            unzip awscli-bundle.zip
+            ./awscli-bundle/install -b ~/bin/aws
       - run:
           name: Get backend url.
           command: |
-            bkip=$(echo "aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeopleBackend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            bkip=$(echo "~/bin/aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeopleBackend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
             echo $bkip > bkip.sh; chmod 755 bkip.sh
             backendip=$(./bkip.sh)
             curl -H "Content-Type: text/plain" -H "token: d5226998-4c5a-4a13-93ae-f62e333d9999" --request PUT --data "$backendip" https://api.memstash.io/values/ec2_bkip_${CIRCLE_WORKFLOW_ID} 

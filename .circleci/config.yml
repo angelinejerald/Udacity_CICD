@@ -204,7 +204,6 @@ jobs:
             cat .env
             npm i
             npm install oauth-sign
-            npm run migrations > migrationresult.txt
       - run:
           name: Send migration results to memstash
           command: |

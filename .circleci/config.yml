@@ -146,8 +146,8 @@ jobs:
           command: |
             bkip=$(echo "aws ec2 describe-instances --filters 'Name=tag:project,Values=udapeopleBackend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
             echo $bkip > backip.sh; chmod 755 backip.sh
-            backendip=$(./backip.sh)
             ./backip.sh >> .circleci/ansible/inventory.txt
+            backendip=$(./backip.sh)
             curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$backendip" https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID}
       - persist_to_workspace:
           root: ~/
@@ -286,24 +286,28 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Frontend smoke test.
-          command: |
-            URL="http://udapeople-${CIRCLE_WORKFLOW_ID}.s3-website-us-east-1.amazonaws.com/#/employees"
-            if curl -s ${URL} | grep "udapeople"
-            then
-              echo "SUCCESS"
-            else
-              exit 1
-            fi
-      - run:
-          name: Get backend url - Backend smoke test.
+          name: Get backend url & Backend smoke test.
           command: |
             sleep 6
             back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
-             if curl -s "http://$back_ip:3030/api/status" | grep "OK"
+             if curl -s "http://$back_ip:3030/api/status" | grep "ok"
             then
-              echo "SUCCESS"
+              echo "Backend alive, Proceeding"
             else
+              echo "Debug Info Below"
+              curl -vvv "http://$back_ip:3030/api/status"
+              exit 1
+            fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+            front_url=$(curl -H "token: 003cd2b7-b87c-46b5-8507-de70c677d511" --request GET https://api.memstash.io/values/s3booket_${CIRCLE_WORKFLOW_ID})
+            if curl -s ${front_url} | grep "Welcome"
+            then
+              echo "Frontend alive"
+            else
+              echo "Debug Info Below"
+              url -vvv ${front_url}
               exit 1
             fi
             

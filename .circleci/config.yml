@@ -10,6 +10,10 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
+            sudo apt-get install -y libpython-dev
+            curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+            unzip awscli-bundle.zip
+            ./awscli-bundle/install -b ~/bin/aws
             ~/bin/aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
             ~/bin/aws cloudformation delete-stack --stack-name udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}
             ~/bin/aws cloudformation delete-stack --stack-name udapeople-frontendStack-${CIRCLE_WORKFLOW_ID:0:7}
@@ -260,7 +264,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            papk add --update ansible tar gzip ansible nodejs npm less
+            apk --update ansible tar gzip ansible nodejs npm less
             pip install awscli
       - run:
           name: Deploy backend

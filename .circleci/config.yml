@@ -47,10 +47,6 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci
 
   build-backend:
     docker:
@@ -229,8 +225,6 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/
       - run:
           name: Install dependencies
           command: |

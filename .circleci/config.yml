@@ -22,7 +22,7 @@ commands:
           when: on_fail
           command: |
             SUCCESS=`curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}`
-            if [ "$SUCCESS" == "Migration Successful" ]; 
+            if [ "$SUCCESS" == "Successful" ]; 
             then
                cd ~/project/backend
                npm install
@@ -47,6 +47,10 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/build
 
   build-backend:
     docker:
@@ -222,6 +226,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies
           command: |

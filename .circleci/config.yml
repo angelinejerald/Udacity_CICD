@@ -144,7 +144,7 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            bkip=$(echo "aws ec2 describe-instances --filters 'Name=tag:Name,Values=backend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            bkip=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:Name,Values=backend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
             echo $bkip;
             echo $bkip > backip.sh; chmod 755 backip.sh
             ./backip.sh >> .circleci/ansible/inventory.txt

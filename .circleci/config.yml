@@ -153,7 +153,7 @@ jobs:
             echo $backendip;
             export CWID=$(echo "${CIRCLE_WORKFLOW_ID:0:7}")
             echo $CWID;
-            export AWS_DEFAULT_OUTPUT = $(echo "aws --region 'us-east-1' ec2 describe-instances --filters 'Name=tag:Name,Values=backend_$CWID' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            export AWS_DEFAULT_OUTPUT = $("aws --region 'us-east-1' ec2 describe-instances --filters 'Name=tag:Name,Values=backend_$CWID' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
             echo $AWS_DEFAULT_OUTPUT;
             curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$AWS_DEFAULT_OUTPUT" https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID}
       - persist_to_workspace:

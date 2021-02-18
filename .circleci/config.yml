@@ -102,7 +102,7 @@ jobs:
           command: |
             cd ./frontend
             npm i
-            npm audit fix --audit-level=critical --force
+            npm audit fix --audit-level=critical
 
   scan-backend:
     docker:
@@ -151,9 +151,9 @@ jobs:
             backendip=$(./backip.sh)
             echo "hi";
             echo $backendip;
-            ID = $(aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:Name,Values=backend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-            echo $ID;
-            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$ID" https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID}
+            export AWS_DEFAULT_OUTPUT= = $(aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:Name,Values=backend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            echo $AWS_DEFAULT_OUTPUT;
+            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$AWS_DEFAULT_OUTPUT" https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID}
       - persist_to_workspace:
           root: ~/
           paths:

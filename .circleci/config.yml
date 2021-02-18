@@ -246,8 +246,6 @@ jobs:
             s3Bucket=$(echo "udapeople-${CIRCLE_WORKFLOW_ID:0:7}")
             echo $s3Bucket;
             aws s3 sync dist s3://$s3Bucket/
-            s3url=("http://$s3Bucket.s3-website-us-east-1.amazonaws.com")
-            curl -H "Content-Type: text/plain" -H "token: 230ab2cb-af1d-4d61-9e3f-a58a70bb7b13" --request PUT --data "$s3url" https://api.memstash.io/values/s3bucket_${CIRCLE_WORKFLOW_ID:0:7}
       - destroy-environment 
 
   deploy-backend:
@@ -301,8 +299,8 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            front_url=$(curl -H "token: 230ab2cb-af1d-4d61-9e3f-a58a70bb7b13" --request GET https://api.memstash.io/values/s3bucket_${CIRCLE_WORKFLOW_ID:0:7})
-            if curl -s ${front_url} | grep "Welcome"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
+            if curl -s ${URL} | grep "Welcome"
             then
               echo "Frontend working"
             else

@@ -266,6 +266,7 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            [[ ! -d backend ]] && mkdir backend
             myenv="backend/.env"
             echo ENVIROMENT=production > $myenv
             echo TYPEORM_CONNECTION=postgres >> $myenv

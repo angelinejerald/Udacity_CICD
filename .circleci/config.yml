@@ -145,12 +145,13 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            cwid=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:project,Values=udapeopleBackend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            cwid=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:Name,Values=backend_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
             echo $cwid > backip.sh; chmod 755 backip.sh
             ./backip.sh >> .circleci/ansible/inventory.txt
             backendip=$(./backip.sh)
             curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$backendip" https://api.memstash.io/values/ec2_back_ip_circle
             echo "hi";
+            cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:

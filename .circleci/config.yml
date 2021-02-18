@@ -292,12 +292,12 @@ jobs:
             sleep 6
             back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
             echo ${back_ip}
-            export NO_PROXY=$back_ip
             if curl -s "http://$back_ip:3030/api/status" | grep "ok"
             then
               echo "Backend alive, Proceeding"
             else
               echo "Debug Info Below"
+              echo "http://$back_ip:3030/api/status"
               curl -vvv "http://$back_ip:3030/api/status"
               exit 1
             fi

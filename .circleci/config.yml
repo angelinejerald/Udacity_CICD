@@ -145,7 +145,7 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            bkcommand=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:project,Values=udapeopleBK_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            bkcommand=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:project,Values=udapeopleBK_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicDnsName' --output text")
             echo $bkcommand > backip.sh; chmod 755 backip.sh
             ./backip.sh >> .circleci/ansible/inventory.txt
             bkip=$(./backip.sh)
@@ -231,7 +231,7 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            ip_back=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID})
+            ip_back=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID:0:7})
             export BACK_URL=$(echo "http://$ip_back:3030")
             cd frontend
             echo "${BACK_URL}" > backurl.txt
@@ -247,7 +247,7 @@ jobs:
             echo $s3Bucket;
             aws s3 sync dist s3://$s3Bucket/
             s3url=("http://$s3Bucket.s3-website-us-east-1.amazonaws.com")
-            curl -H "Content-Type: text/plain" -H "token: 230ab2cb-af1d-4d61-9e3f-a58a70bb7b13" --request PUT --data "$s3url" https://api.memstash.io/values/s3bucket_${CIRCLE_WORKFLOW_ID}
+            curl -H "Content-Type: text/plain" -H "token: 230ab2cb-af1d-4d61-9e3f-a58a70bb7b13" --request PUT --data "$s3url" https://api.memstash.io/values/s3bucket_${CIRCLE_WORKFLOW_ID:0:7}
       - destroy-environment 
 
   deploy-backend:

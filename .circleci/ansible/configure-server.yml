@@ -23,7 +23,7 @@
         update_cache: yes
 
   environment:
-    ENVIRONMENT: local
+    ENVIRONMENT: production
     TYPEORM_CONNECTION: postgres
     TYPEORM_ENTITIES: ./src/modules/domain/**/*.entity.ts
     TYPEORM_HOST: $TYPEORM_HOST

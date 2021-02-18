@@ -289,6 +289,16 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Get backend url & Backend smoke test.
+          command: |
+            back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID:0:7})
+            if curl -s "https://$back_ip:3030/api/status" | grep "ok"
+            then
+              echo "Working"
+            else
+              exit 1
+            fi
+      - run:
           name: Frontend smoke test.
           command: |
             front_url=$(curl -H "token: 230ab2cb-af1d-4d61-9e3f-a58a70bb7b13" --request GET https://api.memstash.io/values/s3bucket_${CIRCLE_WORKFLOW_ID:0:7})

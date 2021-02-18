@@ -202,14 +202,14 @@ jobs:
             cat .env
             npm i
             npm install oauth-sign
-            npm run migrations > migrationresult.txt
+            npm run migrations > result.txt
       - run:
           name: Send migration results to memstash
           command: |
             #!/bin/bash
             cd backend
-            cat migrationresult.txt
-            if [ $(grep -i "has been executed successfully" migrationresult.txt | wc -l) -ge 1 ]
+            cat result.txt
+            if [ $(grep -i "has been executed successfully" result.txt | wc -l) -ge 1 ]
               then 
               curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Successful" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
               else

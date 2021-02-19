@@ -126,23 +126,6 @@ jobs:
           command: 
             yum -y install tar gzip
       - run:
-          name: Ensure back-end infrastructure exists
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/backend.yml \
-              --stack-name "udapeople-backendStack-ab3d39d" \
-              --parameter-overrides ID="ab3d39d"\
-              --tags project="udapeopleBK_ab3d39d"
-
-      - run:
-          name: Ensure front-end infrastructure exist
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/frontend.yml \
-              --tags project="udapeopleFE_ab3d39d" \
-              --stack-name "udapeople-frontendStack-ab3d39d" \
-              --parameter-overrides ID="ab3d39d"
-      - run:
           name: Add back-end ip to ansible inventory
           command: |
             bkcommand=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:project,Values=udapeopleBK_ab3d39d' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")

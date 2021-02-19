@@ -311,9 +311,6 @@ jobs:
             else
               exit 1
             fi
-            
-      - destroy-environment 
-      - revert-migrations
 
 
 workflows:
@@ -344,4 +341,4 @@ workflows:
       - deploy-backend:
             requires: [deploy-frontend]
       - smoke-test:
-            requires: [deploy-backend]
+            requires: [deploy-backend, deploy-frontend]

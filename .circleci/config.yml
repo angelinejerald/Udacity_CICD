@@ -10,9 +10,9 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            aws s3 rm "s3://udapeople-ab3d39d" --recursive
-            aws cloudformation delete-stack --stack-name udapeople-backendStack-ab3d39d
-            aws cloudformation delete-stack --stack-name udapeople-frontendStack-ab3d39d
+            aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
+            aws cloudformation delete-stack --stack-name udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-frontendStack-${CIRCLE_WORKFLOW_ID:0:7}
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.  
@@ -21,7 +21,7 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=`curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/migration_ab3d39d`
+            SUCCESS=`curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}`
             if [ "$SUCCESS" == "Successful" ]; 
             then
                cd ~/project/backend
@@ -128,11 +128,11 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            bkcommand=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:project,Values=udapeopleBK_ab3d39d' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            bkcommand=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:project,Values=udapeopleBK_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
             echo $bkcommand > backip.sh; chmod 755 backip.sh
             ./backip.sh >> .circleci/ansible/inventory.txt
             bkip=$(./backip.sh)
-            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$bkip" https://api.memstash.io/values/ec2_bk_ab3d39d
+            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$bkip" https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID:0:7}
             cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: .circleci
@@ -194,9 +194,9 @@ jobs:
             cat result.txt
             if [ $(grep -i "has been executed successfully" result.txt | wc -l) -ge 1 ]
               then 
-              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Successful" https://api.memstash.io/values/migration_ab3d39d
+              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Successful" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
               else
-              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Failed" https://api.memstash.io/values/migration_ab3d39d
+              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Failed" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
             fi
       - destroy-environment
 
@@ -214,7 +214,7 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            ip_back=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_ab3d39d)
+            ip_back=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID:0:7})
             export API_URL=$(echo "http://$ip_back:3030")
             cd frontend
             echo "${API_URL}" > apiurl.txt
@@ -226,7 +226,7 @@ jobs:
             cat apiurl.txt
             npm i
             npm run build
-            s3Bucket=$(echo "udapeople-ab3d39d")
+            s3Bucket=$(echo "udapeople-${CIRCLE_WORKFLOW_ID:0:7}")
             aws s3 sync dist s3://$s3Bucket/
       - persist_to_workspace:
           root: .
@@ -276,7 +276,7 @@ jobs:
       - run:
           name: Frontend smoke test.
           command: |
-            URL="http://udapeople-ab3d39d.s3-website-us-east-1.amazonaws.com"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
             if curl -s ${URL} | grep "Welcome"
             then
               echo "Frontend working"
@@ -317,4 +317,3 @@ workflows:
             requires: [deploy-frontend]
       - smoke-test:
             requires: [deploy-backend]
-

@@ -300,6 +300,7 @@ jobs:
               echo "Working"
             else
             echo "Error!"
+            echo curl -s "http://$back_ip:3030/api/status";
             curl -vvv "http://$back_ip:3030/api/status"
             exit 1
             fi
@@ -314,9 +315,6 @@ jobs:
             else
               exit 1
             fi
-
-      - destroy-environment
-      - revert-migrations
 
   cloudfront-update:
     docker:

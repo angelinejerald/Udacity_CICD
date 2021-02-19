@@ -10,9 +10,9 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            aws s3 rm "s3://udapeople-e628d36" --recursive
-            aws cloudformation delete-stack --stack-name udapeople-backendStack-e628d36
-            aws cloudformation delete-stack --stack-name udapeople-frontendStack-e628d36
+            aws s3 rm "s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7}" --recursive
+            aws cloudformation delete-stack --stack-name udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-frontendStack-${CIRCLE_WORKFLOW_ID:0:7}
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.  
@@ -21,7 +21,7 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=`curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/migration_e628d36`
+            SUCCESS=`curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}`
             if [ "$SUCCESS" == "Successful" ]; 
             then
                cd ~/project/backend
@@ -130,26 +130,26 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
-              --stack-name "udapeople-backendStack-e628d36" \
-              --parameter-overrides ID="e628d36"\
-              --tags project="udapeopleBK_e628d36"
+              --stack-name "udapeople-backendStack-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"\
+              --tags project="udapeopleBK_${CIRCLE_WORKFLOW_ID:0:7}"
 
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
-              --tags project="udapeopleFE_e628d36" \
-              --stack-name "udapeople-frontendStack-e628d36" \
-              --parameter-overrides ID="e628d36"
+              --tags project="udapeopleFE_${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "udapeople-frontendStack-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            bkcommand=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:project,Values=udapeopleBK_e628d36' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
+            bkcommand=$(echo "aws ec2 describe-instances --region us-east-1 --filters 'Name=tag:project,Values=udapeopleBK_${CIRCLE_WORKFLOW_ID:0:7}' --query 'Reservations[*].Instances[*].PublicIpAddress' --output text")
             echo $bkcommand > backip.sh; chmod 755 backip.sh
             ./backip.sh >> .circleci/ansible/inventory.txt
             bkip=$(./backip.sh)
-            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$bkip" https://api.memstash.io/values/ec2_bk_e628d36
+            curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "$bkip" https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID:0:7}
             cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: .circleci
@@ -211,9 +211,9 @@ jobs:
             cat result.txt
             if [ $(grep -i "has been executed successfully" result.txt | wc -l) -ge 1 ]
               then 
-              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Successful" https://api.memstash.io/values/migration_e628d36
+              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Successful" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
               else
-              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Failed" https://api.memstash.io/values/migration_e628d36
+              curl -H "Content-Type: text/plain" -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request PUT --data "Failed" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
             fi
       - destroy-environment
 
@@ -231,7 +231,7 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            ip_back=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_e628d36)
+            ip_back=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID:0:7})
             export API_URL=$(echo "http://$ip_back:3030")
             cd frontend
             echo "${API_URL}" > apiurl.txt
@@ -243,7 +243,7 @@ jobs:
             cat apiurl.txt
             npm i
             npm run build
-            s3Bucket=$(echo "udapeople-e628d36")
+            s3Bucket=$(echo "udapeople-${CIRCLE_WORKFLOW_ID:0:7}")
             aws s3 sync dist s3://$s3Bucket/
       - persist_to_workspace:
           root: .
@@ -293,29 +293,58 @@ jobs:
       - run:
           name: Get backend url & Backend smoke test.
           command: |
-            back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_e628d36)
+            back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID:0:7})
             echo "http://$back_ip:3030/api/status";
             if curl -s "http://$back_ip:3030/api/status" | grep "ok"
             then
               echo "Working"
             else
-              echo "Debug Info Below"
-              curl -vvv "http://$back_ip:3030/api/status"
               exit 1
             fi
 
       - run:
           name: Frontend smoke test.
           command: |
-            URL="http://udapeople-e628d36.s3-website-us-east-1.amazonaws.com"
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com"
             if curl -s ${URL} | grep "Welcome"
             then
-              exit 1
+              echo "Working"
             else
               exit 1
             fi
 
+      - destroy-environment
+      - revert-migrations
 
+  cloudfront-update:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            export OldWorkFlowId=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text)
+
+            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+                          --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+
+            echo "Old WorkFlow Id: ${OldWorkFlowId:0:7}";
+
+            aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name "Udapeople-Cloudfront" \
+              --region ${AWS_DEFAULT_REGION} \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
+
+            if [[ "${STACKS[@]}" =~ "${OldWorkFlowId:0:7}" ]]
+            then
+              aws s3 rm "s3://udapeople-${OldWorkFlowId:0:7}" --recursive
+              aws cloudformation delete-stack --stack-name udapeople-backendStack-${OldWorkFlowId:0:7}
+              aws cloudformation delete-stack --stack-name udapeople-frontendStack-${OldWorkFlowId:0:7}
+            fi
+      - destroy-environment 
+  
 workflows:
   default:
     jobs:
@@ -345,3 +374,5 @@ workflows:
             requires: [deploy-frontend]
       - smoke-test:
             requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]

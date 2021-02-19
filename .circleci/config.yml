@@ -300,38 +300,24 @@ jobs:
             else
               exit 1
             fi
+
+      - run:
+          name: Get backend url & Backend smoke test.
+          command: |
+            back_ip=$(curl -H "token: d4a80299-0f25-4edb-8b00-23f64dbac30a" --request GET https://api.memstash.io/values/ec2_bk_${CIRCLE_WORKFLOW_ID:0:7})
+            export NO_PROXY=169.254.169.254
+            if curl -s "http://$back_ip:3030/api/status" | grep "ok"
+            then
+              echo "Working"
+            else
+              echo "Debug"
+              curl -vvv "http://$back_ip:3030/api/status"
+              exit 1
+            fi
             
       - destroy-environment 
       - revert-migrations
 
-  cloudfront-update:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: Update cloudfront distribution
-          command: |
-            echo "Update CloudFront"
-            check_for_id=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text)
-            if [ -z $check_for_id ]
-            then
-              aws cloudformation deploy \
-              --template-file .circleci/files/cloudfront.yml \
-              --stack-name "Udapeople-Cloudfront" \
-              --region ${AWS_DEFAULT_REGION} \
-              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
-            else
-              echo "Fresh Deploy"
-              aws cloudformation delete-stack --stack-name Udapeople-Cloudfront
-              sleep 240
-              aws cloudformation deploy \
-              --template-file .circleci/files/cloudfront.yml \
-              --stack-name "Udapeople-Cloudfront" \
-              --region ${AWS_DEFAULT_REGION} \
-              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
-            fi
-      - destroy-environment 
 
 workflows:
   default:
@@ -362,5 +348,4 @@ workflows:
             requires: [deploy-frontend]
       - smoke-test:
             requires: [deploy-backend]
-      - cloudfront-update:
-            requires: [smoke-test]
+

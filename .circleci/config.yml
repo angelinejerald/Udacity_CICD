@@ -299,6 +299,7 @@ jobs:
               echo "Working"
             else
               exit 1
+            fi
 
       - run:
           name: Frontend smoke test.

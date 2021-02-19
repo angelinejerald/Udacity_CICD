@@ -244,7 +244,6 @@ jobs:
             npm i
             npm run build
             s3Bucket=$(echo "udapeople-${CIRCLE_WORKFLOW_ID:0:7}")
-            echo $s3Bucket;
             aws s3 sync dist s3://$s3Bucket/
       - destroy-environment 
 

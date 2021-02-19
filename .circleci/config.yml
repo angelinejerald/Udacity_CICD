@@ -299,7 +299,9 @@ jobs:
             then
               echo "Working"
             else
-              exit 1
+            echo "Error!"
+            curl -vvv "http://$back_ip:3030/api/status"
+            exit 1
             fi
 
       - run:
